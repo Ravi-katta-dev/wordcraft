@@ -1,0 +1,74 @@
+name: Android Feasibility Check
+
+on:
+  push:
+    branches:
+      - pr1
+    paths:
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".cargo/**"
+      - "apps/wordcraft/**"
+      - "crates/**"
+      - ".github/workflows/android-feasibility.yml"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".cargo/**"
+      - "apps/wordcraft/**"
+      - "crates/**"
+      - ".github/workflows/android-feasibility.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-feasibility-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android-check:
+    name: Compile WordCraft for Android ARM64
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    env:
+      ANDROID_NDK_VERSION: "27.2.12479018"
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android NDK
+        run: |
+          sdkmanager "platform-tools" "ndk;${ANDROID_NDK_VERSION}"
+          echo "ANDROID_NDK_HOME=${ANDROID_SDK_ROOT}/ndk/${ANDROID_NDK_VERSION}" >> "$GITHUB_ENV"
+
+      - name: Configure Android linker
+        run: |
+          echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang" >> "$GITHUB_ENV"
+
+      - name: Install Rust and Android target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+
+      - name: Report toolchain versions
+        run: |
+          rustc --version
+          cargo --version
+          test -x "${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang"
+
+      - name: Check existing WordCraft Android compatibility
+        run: cargo check --locked -p wordcraft --target aarch64-linux-android
