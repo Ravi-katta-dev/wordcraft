@@ -32,7 +32,7 @@ winresource = "0.1"
 # workspace forbids) behind a safe API. Pinned exactly: review the diff before bumping.
 fmv-macos-events = "=0.1.0"
 
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+[target.'cfg(all(not(target_arch = "wasm32"), not(target_os = "android")))'.dependencies]
 rfd = { workspace = true }
 # Waits for an `rfd::AsyncFileDialog` on a background thread (the dialogs don't block the UI, #94);
 # rfd itself already depends on it.
