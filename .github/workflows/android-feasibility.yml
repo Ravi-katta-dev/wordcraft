@@ -3,7 +3,7 @@ name: Android QA APK
 on:
   push:
     branches: [pr1]
-    paths: ["android/**", ".github/workflows/android-feasibility.yml"]
+    paths: ["android/**", "apps/wordcraft/**", "crates/ui-egui/**", ".github/workflows/android-feasibility.yml"]
   pull_request:
     paths: ["android/**", ".github/workflows/android-feasibility.yml"]
   workflow_dispatch:

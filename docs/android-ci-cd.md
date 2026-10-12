@@ -7,7 +7,7 @@ This repository uses separate workflows so everyday source edits remain fast and
 | Stage | Workflow | Trigger | Output |
 | --- | --- | --- | --- |
 | 1. Fast source gate | [Android CI - Fast](../.github/workflows/android-rust-check.yml) | Relevant code push/PR or manual run | Rust formatting result and Android ARM64 compile check |
-| 2. Device-test package | [Android QA APK](../.github/workflows/android-feasibility.yml) | Android packaging changes, PR, or manual run | Temporary-signed APK + SHA-256 + build metadata (14-day artifact) |
+| 2. Device-test package | [Android QA APK](../.github/workflows/android-feasibility.yml) | App entry-point/UI-layer or Android packaging changes, PR, or manual run | Temporary-signed APK + SHA-256 + build metadata (14-day artifact) |
 | 3. Versioned release | [Android Release](../.github/workflows/android-release.yml) | Tag android-vMAJOR.MINOR.PATCH or manual version input | Optimized APK with persistent signature, checksum and GitHub Release |
 
 The QA workflow builds arm64-v8a (phones) and x86_64 (emulator) native libraries, inspects the APK package contents and signature, and uploads only after verification. Its temporary signing key is deliberately discarded; Android treats each QA build as a different signer. To install a new QA build over an existing QA build, uninstall the old app first.
@@ -39,6 +39,8 @@ After adding the signing secrets and checking the fast workflow, create and push
 The Android Release workflow tests, builds, signs, verifies, calculates the SHA-256 checksum and publishes WordCraft-Android-0.5.1.apk to a GitHub Release. Android versionCode is derived deterministically from MAJOR.MINOR.PATCH; each component must be less than 1000.
 
 GitHub only exposes the manual `workflow_dispatch` button after this workflow exists on the repository's default branch (`main`). Until the workflow is merged to `main`, use the version-tag method above from a commit that contains `.github/workflows/android-release.yml`. After it is on `main`, you can also use Actions → Android Release → Run workflow, select the intended branch/commit, and enter a version such as `0.5.1`.
+
+On the working `pr1` branch, changes under `apps/wordcraft/**`, `crates/ui-egui/**` or `android/**` automatically start the QA package build. The manual Run workflow button is only available after the workflow is present on the default branch (`main`).
 
 ## Getting the QA APK
 
