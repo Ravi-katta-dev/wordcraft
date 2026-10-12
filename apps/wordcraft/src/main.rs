@@ -11,11 +11,14 @@
 
 #[cfg(target_os = "macos")]
 mod apple_events;
+#[cfg(not(target_os = "android"))]
 mod control_server;
+#[cfg_attr(target_os = "android", path = "file_dialogs_android.rs")]
 mod file_dialogs;
 #[cfg(any(target_os = "windows", test))]
 mod graphics;
 mod logging;
+#[cfg_attr(target_os = "android", path = "print_android.rs")]
 mod print;
 
 use wordcraft_engine::Session;
@@ -31,7 +34,7 @@ use wordcraft_ui_egui::{
 struct App(
     WordApp,
     Option<WindowGeometry>,
-    Option<control_server::KeyFile>,
+    #[cfg(not(target_os = "android"))] Option<control_server::KeyFile>,
     file_dialogs::Launcher,
     #[cfg(target_os = "macos")] fmv_macos_events::Inbox,
 );
@@ -64,6 +67,7 @@ impl eframe::App for App {
     }
     fn on_exit(&mut self) {
         save_prefs(&self.0);
+        #[cfg(not(target_os = "android"))]
         if let Some(key_file) = &self.2 {
             key_file.remove();
         }
@@ -126,6 +130,7 @@ fn services(file_dialog: file_dialogs::Hook) -> Services {
     Services {
         file_dialog: Some(file_dialog),
         print: Some(print::hook()),
+        #[cfg(not(target_os = "android"))]
         clipboard_picture: Some(Box::new(clipboard_picture)),
         ..Default::default()
     }
@@ -133,6 +138,7 @@ fn services(file_dialog: file_dialogs::Hook) -> Services {
 
 /// The picture on the system clipboard (#45): copied files, else image pixels. The UI checks the
 /// sizes before inserting anything.
+#[cfg(not(target_os = "android"))]
 fn clipboard_picture() -> Option<ClipboardPicture> {
     let mut clipboard = arboard::Clipboard::new().map_err(|e| log::warn!("clipboard: {e}")).ok()?;
     if let Ok(files) = clipboard.get().file_list()
