@@ -1,25 +1,17 @@
-name: Android Feasibility Check
+name: Android APK Build
 
 on:
+  # APK packaging is intentionally separate from fast source checks. Run this manually
+  # after a set of Rust/UI changes is ready for device testing, or on Android packaging edits.
   push:
     branches:
       - pr1
     paths:
-      - "Cargo.toml"
-      - "Cargo.lock"
-      - ".cargo/**"
-      - "apps/wordcraft/**"
-      - "crates/**"
       - "android/**"
       - ".github/workflows/android-feasibility.yml"
   workflow_dispatch:
   pull_request:
     paths:
-      - "Cargo.toml"
-      - "Cargo.lock"
-      - ".cargo/**"
-      - "apps/wordcraft/**"
-      - "crates/**"
       - "android/**"
       - ".github/workflows/android-feasibility.yml"
 
@@ -27,7 +19,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: android-feasibility-${{ github.ref }}
+  group: android-apk-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
