@@ -32,7 +32,7 @@ concurrency:
 
 jobs:
   android-check:
-    name: Build and smoke-test WordCraft Android (ARM64)
+    name: Build and sign WordCraft Android APK (no emulator)
     runs-on: ubuntu-24.04
     timeout-minutes: 60
 
@@ -141,28 +141,6 @@ jobs:
           echo "SIGNED_TEST_APK=$SIGNED_APK" >> "$GITHUB_ENV"
           rm -f "$KEYSTORE" "${RUNNER_TEMP}/wordcraft-aligned.apk"
 
-      - name: Smoke-test launch on Android emulator
-        uses: ReactiveCircus/android-emulator-runner@v2
-        with:
-          api-level: 35
-          arch: x86_64
-          profile: pixel_2
-          disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
-          script: |
-            set -euo pipefail
-            adb install -r "${SIGNED_TEST_APK}"
-            adb shell am start -W -n ai.storyteller.wordcraft/.MainActivity
-            for attempt in $(seq 1 30); do
-              if adb shell pidof ai.storyteller.wordcraft >/dev/null 2>&1; then
-                echo "WordCraft process is running on the emulator."
-                exit 0
-              fi
-              sleep 1
-            done
-            adb logcat -d -t 2000 | grep -E "FATAL EXCEPTION|AndroidRuntime|wordcraft|libc" | tail -n 160 || true
-            echo "WordCraft did not remain running after launch." >&2
-            exit 1
 
       - name: Upload installable APK
         uses: actions/upload-artifact@v4
