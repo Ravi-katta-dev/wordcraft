@@ -52,12 +52,10 @@ jobs:
           echo "CC_x86_64-linux-android=$TOOLCHAIN/x86_64-linux-android24-clang" >> "$GITHUB_ENV"
           echo "CXX_x86_64-linux-android=$TOOLCHAIN/x86_64-linux-android24-clang++" >> "$GITHUB_ENV"
           echo "AR_x86_64-linux-android=$TOOLCHAIN/llvm-ar" >> "$GITHUB_ENV"
-      - name: Check Android Rust compatibility
-        run: cargo check -p wordcraft --target aarch64-linux-android --features eframe/android-game-activity
       - name: Install cargo-ndk
         run: cargo install cargo-ndk --locked
-      - name: Build native libraries for phones and emulator
-        run: cargo ndk -t arm64-v8a -t x86_64 -o android/app/src/main/jniLibs build --release --lib -p wordcraft --features eframe/android-game-activity
+      - name: Build debug-profile native libraries for phones and emulator
+        run: cargo ndk -t arm64-v8a -t x86_64 -o android/app/src/main/jniLibs build --lib -p wordcraft --features eframe/android-game-activity
       - uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: "8.9"
