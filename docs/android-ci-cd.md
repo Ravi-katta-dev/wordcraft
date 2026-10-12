@@ -38,7 +38,7 @@ After adding the signing secrets and checking the fast workflow, create and push
 
 The Android Release workflow tests, builds, signs, verifies, calculates the SHA-256 checksum and publishes WordCraft-Android-0.5.1.apk to a GitHub Release. Android versionCode is derived deterministically from MAJOR.MINOR.PATCH; each component must be less than 1000.
 
-Alternatively, use Actions → Android Release → Run workflow, select the intended branch/commit, and enter a version such as 0.5.1. This creates/publishes the corresponding version tag at the selected workflow commit.
+GitHub only exposes the manual `workflow_dispatch` button after this workflow exists on the repository's default branch (`main`). Until the workflow is merged to `main`, use the version-tag method above from a commit that contains `.github/workflows/android-release.yml`. After it is on `main`, you can also use Actions → Android Release → Run workflow, select the intended branch/commit, and enter a version such as `0.5.1`.
 
 ## Getting the QA APK
 
