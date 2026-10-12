@@ -1,4 +1,5 @@
 //! Android shared-library entry point for WordCraft.
+#![allow(unsafe_code)]
 
 // Keep the app implementation in a module so its inner docs and attributes remain valid.
 #[path = "main.rs"]
