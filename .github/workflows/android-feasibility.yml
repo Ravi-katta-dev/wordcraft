@@ -111,6 +111,36 @@ jobs:
           unzip -l "$APK" | grep -E "lib/arm64-v8a/libwordcraft.so"
           unzip -l "$APK" | grep -E "lib/x86_64/libwordcraft.so"
 
+      - name: Temporarily sign APK for device testing
+        shell: bash
+        run: |
+          set -euo pipefail
+          BUILD_TOOLS="${ANDROID_SDK_ROOT}/build-tools/35.0.0"
+          INPUT_APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          SIGNED_APK="${RUNNER_TEMP}/wordcraft-android-test-signed.apk"
+          KEYSTORE="${RUNNER_TEMP}/wordcraft-temporary-test-signing.jks"
+          STORE_PASSWORD="$(openssl rand -hex 24)"
+          keytool -genkeypair -noprompt -v \
+            -keystore "$KEYSTORE" \
+            -storetype JKS \
+            -storepass "$STORE_PASSWORD" \
+            -keypass "$STORE_PASSWORD" \
+            -alias wordcraft-test \
+            -keyalg RSA -keysize 2048 -validity 30 \
+            -dname "CN=WordCraft Temporary CI Test,O=WordCraft,C=US"
+          "$BUILD_TOOLS/zipalign" -f -v 4 "$INPUT_APK" "${RUNNER_TEMP}/wordcraft-aligned.apk"
+          "$BUILD_TOOLS/apksigner" sign \
+            --ks "$KEYSTORE" \
+            --ks-key-alias wordcraft-test \
+            --ks-pass "pass:$STORE_PASSWORD" \
+            --key-pass "pass:$STORE_PASSWORD" \
+            --out "$SIGNED_APK" \
+            "${RUNNER_TEMP}/wordcraft-aligned.apk"
+          "$BUILD_TOOLS/apksigner" verify --verbose "$SIGNED_APK"
+          "$BUILD_TOOLS/aapt" dump badging "$SIGNED_APK" | grep -E "package: name='ai.storyteller.wordcraft'|application-label:'WordCraft'"
+          echo "SIGNED_TEST_APK=$SIGNED_APK" >> "$GITHUB_ENV"
+          rm -f "$KEYSTORE" "${RUNNER_TEMP}/wordcraft-aligned.apk"
+
       - name: Smoke-test launch on Android emulator
         uses: ReactiveCircus/android-emulator-runner@v2
         with:
@@ -121,7 +151,7 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           script: |
             set -euo pipefail
-            adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+            adb install -r "${SIGNED_TEST_APK}"
             adb shell am start -W -n ai.storyteller.wordcraft/.MainActivity
             for attempt in $(seq 1 30); do
               if adb shell pidof ai.storyteller.wordcraft >/dev/null 2>&1; then
@@ -138,6 +168,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wordcraft-android-arm64-debug
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: ${{ runner.temp }}/wordcraft-android-test-signed.apk
           if-no-files-found: error
           retention-days: 14
