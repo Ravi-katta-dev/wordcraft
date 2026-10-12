@@ -32,9 +32,9 @@ concurrency:
 
 jobs:
   android-check:
-    name: Build WordCraft Android APK (ARM64)
+    name: Build and smoke-test WordCraft Android (ARM64)
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 60
 
     env:
       ANDROID_NDK_VERSION: "27.2.12479018"
@@ -63,32 +63,37 @@ jobs:
         run: |
           TOOLCHAIN="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin"
           echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$TOOLCHAIN/aarch64-linux-android24-clang" >> "$GITHUB_ENV"
+          echo "CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER=$TOOLCHAIN/x86_64-linux-android24-clang" >> "$GITHUB_ENV"
           echo "CC_aarch64-linux-android=$TOOLCHAIN/aarch64-linux-android24-clang" >> "$GITHUB_ENV"
           echo "CXX_aarch64-linux-android=$TOOLCHAIN/aarch64-linux-android24-clang++" >> "$GITHUB_ENV"
           echo "AR_aarch64-linux-android=$TOOLCHAIN/llvm-ar" >> "$GITHUB_ENV"
+          echo "CC_x86_64-linux-android=$TOOLCHAIN/x86_64-linux-android24-clang" >> "$GITHUB_ENV"
+          echo "CXX_x86_64-linux-android=$TOOLCHAIN/x86_64-linux-android24-clang++" >> "$GITHUB_ENV"
+          echo "AR_x86_64-linux-android=$TOOLCHAIN/llvm-ar" >> "$GITHUB_ENV"
 
-      - name: Install Rust and Android target
+      - name: Install Rust and Android targets
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-linux-android
+          targets: aarch64-linux-android,x86_64-linux-android
 
       - name: Report toolchain versions
         run: |
           rustc --version
           cargo --version
           test -x "${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang"
+          test -x "${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android24-clang"
 
       - name: Check WordCraft Android compatibility
         run: cargo check -p wordcraft --target aarch64-linux-android --features eframe/android-game-activity
 
-      - name: Link Android shared library
+      - name: Link Android ARM64 shared library
         run: cargo build --release --lib -p wordcraft --target aarch64-linux-android --features eframe/android-game-activity
 
       - name: Install cargo-ndk
         run: cargo install cargo-ndk --locked
 
-      - name: Stage Android native libraries
-        run: cargo ndk -t arm64-v8a -o android/app/src/main/jniLibs build --release --lib -p wordcraft --features eframe/android-game-activity
+      - name: Stage ARM64 and emulator native libraries
+        run: cargo ndk -t arm64-v8a -t x86_64 -o android/app/src/main/jniLibs build --release --lib -p wordcraft --features eframe/android-game-activity
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -103,6 +108,31 @@ jobs:
           APK="android/app/build/outputs/apk/debug/app-debug.apk"
           test -s "$APK"
           "${ANDROID_SDK_ROOT}/build-tools/35.0.0/aapt" dump badging "$APK" | grep -E "package: name='ai.storyteller.wordcraft'|application-label:'WordCraft'"
+          unzip -l "$APK" | grep -E "lib/arm64-v8a/libwordcraft.so"
+          unzip -l "$APK" | grep -E "lib/x86_64/libwordcraft.so"
+
+      - name: Smoke-test launch on Android emulator
+        uses: ReactiveCircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          script: |
+            set -euo pipefail
+            adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+            adb shell am start -W -n ai.storyteller.wordcraft/.MainActivity
+            for attempt in $(seq 1 30); do
+              if adb shell pidof ai.storyteller.wordcraft >/dev/null 2>&1; then
+                echo "WordCraft process is running on the emulator."
+                exit 0
+              fi
+              sleep 1
+            done
+            adb logcat -d -t 2000 | grep -E "FATAL EXCEPTION|AndroidRuntime|wordcraft|libc" | tail -n 160 || true
+            echo "WordCraft did not remain running after launch." >&2
+            exit 1
 
       - name: Upload installable APK
         uses: actions/upload-artifact@v4
