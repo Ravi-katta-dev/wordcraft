@@ -66,4 +66,4 @@ jobs:
           cargo --version
           test -x "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang"
       - name: Check Android Rust target
-        run: cargo check --locked -p wordcraft --target aarch64-linux-android --features eframe/android-game-activity
+        run: cargo check -p wordcraft --target aarch64-linux-android --features eframe/android-game-activity

@@ -68,7 +68,7 @@ jobs:
       - name: Check Rust formatting
         run: cargo fmt --all -- --check
       - name: Run core document and layout tests
-        run: cargo test --locked -p wordcraft-geom -p wordcraft-doc -p wordcraft-layout
+        run: cargo test -p wordcraft-geom -p wordcraft-doc -p wordcraft-layout
 
   build-release:
     name: Build and sign release APK

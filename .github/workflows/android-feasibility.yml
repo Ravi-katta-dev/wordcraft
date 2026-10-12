@@ -53,7 +53,7 @@ jobs:
           echo "CXX_x86_64-linux-android=$TOOLCHAIN/x86_64-linux-android24-clang++" >> "$GITHUB_ENV"
           echo "AR_x86_64-linux-android=$TOOLCHAIN/llvm-ar" >> "$GITHUB_ENV"
       - name: Check Android Rust compatibility
-        run: cargo check --locked -p wordcraft --target aarch64-linux-android --features eframe/android-game-activity
+        run: cargo check -p wordcraft --target aarch64-linux-android --features eframe/android-game-activity
       - name: Install cargo-ndk
         run: cargo install cargo-ndk --locked
       - name: Build native libraries for phones and emulator
