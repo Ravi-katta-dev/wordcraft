@@ -1,5 +1,5 @@
 //! Android placeholder for native desktop file dialogs. Android document picker integration is a follow-up.
-use std::sync::mpsc::{channel, Receiver};
+use std::sync::mpsc::{Receiver, channel};
 use wordcraft_ui_egui::FileDialogRequest;
 pub type Hook = Box<dyn Fn(FileDialogRequest) -> Receiver<Option<String>>>;
 pub struct Launcher;

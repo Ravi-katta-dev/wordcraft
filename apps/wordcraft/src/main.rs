@@ -19,15 +19,15 @@ mod logging;
 #[cfg_attr(target_os = "android", path = "print_android.rs")]
 mod print;
 
+#[cfg(target_os = "android")]
+use winit::platform::android::activity::AndroidApp;
 use wordcraft_engine::Session;
+#[cfg(not(target_os = "android"))]
+use wordcraft_ui_egui::paste_picture::ClipboardPicture;
 use wordcraft_ui_egui::{
     Services, UiState, WordApp,
     window_geometry::{WindowGeometry, take_rescue},
 };
-#[cfg(not(target_os = "android"))]
-use wordcraft_ui_egui::paste_picture::ClipboardPicture;
-#[cfg(target_os = "android")]
-use winit::platform::android::activity::AndroidApp;
 
 #[cfg(target_os = "android")]
 type PlatformApp = Option<AndroidApp>;
@@ -283,7 +283,6 @@ pub fn run_app(platform_app: PlatformApp) -> eframe::Result {
         }),
     )
 }
-
 
 #[cfg(not(target_os = "android"))]
 fn main() -> eframe::Result {
