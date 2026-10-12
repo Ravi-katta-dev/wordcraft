@@ -404,6 +404,10 @@ impl SaveChoice {
 
 impl WordApp {
     pub fn new(session: Session, services: Services) -> Self {
+        // Numeral › System follows the system locale, found here rather than in layout.
+        if let Some(tag) = sys_locale::get_locale() {
+            wordcraft_engine::set_system_locale(&tag);
+        }
         WordApp {
             session,
             ui: UiState::default(),
@@ -1561,7 +1565,7 @@ impl AutoSaveBlock {
 /// Whether saving to `name` keeps the whole document (the formats `file.save` treats as the
 /// document's own file, including macro-enabled documents and templates); anything else is a
 /// copy that leaves it unsaved. AutoSave writes only these formats.
-fn keeps_everything(name: &str) -> bool {
+pub fn keeps_everything(name: &str) -> bool {
     let ext = std::path::Path::new(name).extension().map(|e| e.to_string_lossy().to_ascii_lowercase()).unwrap_or_default();
     matches!(ext.as_str(), "docx" | "docm" | "dotx" | "dotm" | "odt" | "rtf" | "json" | "xml")
 }
@@ -2535,7 +2539,9 @@ mod tests {
             assert_eq!(h.query_by_label(BLURB).is_some(), hook, "hook {hook}: the Print button's blurb");
             assert!(h.query_by_label("PDF document (*.pdf)").is_some(), "hook {hook}: the page rendered its export choices");
             if hook {
-                h.get_by_role_and_label(egui::accesskit::Role::Button, "Print").click();
+                // The page's own Print button (the backstage list has a Print entry too): the last.
+                let buttons: Vec<_> = h.query_all(egui_kittest::kittest::By::new().role(egui::accesskit::Role::Button).label("Print")).collect();
+                buttons.last().expect("a Print button").click();
                 h.step();
                 h.step();
                 assert_eq!(printed.get(), 1, "the button printed");
