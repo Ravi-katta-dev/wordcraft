@@ -150,6 +150,7 @@ fn services(file_dialog: file_dialogs::Hook) -> Services {
         print: Some(print::hook()),
         #[cfg(not(target_os = "android"))]
         clipboard_picture: Some(Box::new(clipboard_picture)),
+        #[cfg(not(target_os = "android"))]
         clipboard_text: Some(Box::new(|| arboard::Clipboard::new().ok()?.get_text().ok())),
         ..Default::default()
     }
