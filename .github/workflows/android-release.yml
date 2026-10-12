@@ -187,9 +187,116 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+  emulator-smoke:
+    name: Android 16 emulator launch smoke test
+    needs: [validate, build-release]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: platform-tools
+
+      - name: Install Android 16 emulator image
+        run: |
+          sdkmanager "platforms;android-36" "build-tools;35.0.0" "emulator" "system-images;android-36;google_apis;x86_64"
+
+      - name: Download signed release candidate
+        uses: actions/download-artifact@v8
+        with:
+          name: wordcraft-android-release-${{ needs.validate.outputs.version }}
+          path: release-assets
+
+      - name: Create and boot Android 16 emulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          AVD_NAME="wordcraft-api36"
+          echo "no" | avdmanager create avd \
+            --name "$AVD_NAME" \
+            --package "system-images;android-36;google_apis;x86_64" \
+            --device pixel_2 \
+            --force
+          "$ANDROID_SDK_ROOT/emulator/emulator" \
+            -avd "$AVD_NAME" \
+            -no-window -no-audio -no-boot-anim -no-snapshot -no-metrics \
+            -gpu swiftshader_indirect -wipe-data \
+            > "$RUNNER_TEMP/emulator.log" 2>&1 &
+          echo "$!" > "$RUNNER_TEMP/emulator.pid"
+          adb wait-for-device
+          BOOTED=0
+          for attempt in $(seq 1 90); do
+            if [[ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" == "1" ]]; then
+              BOOTED=1
+              break
+            fi
+            sleep 2
+          done
+          if [[ "$BOOTED" != "1" ]]; then
+            echo "Android emulator did not finish booting." >&2
+            tail -n 200 "$RUNNER_TEMP/emulator.log" || true
+            exit 1
+          fi
+          adb shell input keyevent 82 || true
+          adb shell settings put global window_animation_scale 0 || true
+          adb shell settings put global transition_animation_scale 0 || true
+          adb shell settings put global animator_duration_scale 0 || true
+
+      - name: Install and launch the release APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="$(find release-assets -maxdepth 1 -type f -name 'WordCraft-Android-*.apk' -print -quit)"
+          if [[ -z "$APK" ]]; then
+            echo "Release APK not found in downloaded candidate artifact." >&2
+            find release-assets -maxdepth 2 -type f -print
+            exit 1
+          fi
+          adb install "$APK"
+          adb shell am force-stop ai.storyteller.wordcraft
+          adb shell am start -W -n ai.storyteller.wordcraft/.MainActivity 2>&1 | tee "$RUNNER_TEMP/launch-result.txt"
+          if ! grep -Fq "Status: ok" "$RUNNER_TEMP/launch-result.txt"; then
+            echo "Android activity did not report a successful launch." >&2
+            adb logcat -d -v threadtime > "$RUNNER_TEMP/startup-log.txt" || true
+            tail -n 200 "$RUNNER_TEMP/startup-log.txt" || true
+            exit 1
+          fi
+          sleep 12
+          PID="$(adb shell pidof -s ai.storyteller.wordcraft 2>/dev/null | tr -d '\r' || true)"
+          if [[ -z "$PID" ]]; then
+            echo "WordCraft process exited after launch." >&2
+            adb logcat -d -v threadtime > "$RUNNER_TEMP/startup-log.txt" || true
+            tail -n 200 "$RUNNER_TEMP/startup-log.txt" || true
+            exit 1
+          fi
+          if adb logcat -d --pid="$PID" -v brief | grep -E "FATAL EXCEPTION|Fatal signal"; then
+            echo "WordCraft logged a fatal exception during startup." >&2
+            exit 1
+          fi
+          echo "Android 16 emulator smoke test passed: APK installed, MainActivity launched, process remained alive."
+
+      - name: Upload emulator diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: wordcraft-android-emulator-failure-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/emulator.log
+            ${{ runner.temp }}/launch-result.txt
+            ${{ runner.temp }}/startup-log.txt
+          if-no-files-found: ignore
+          retention-days: 14
+
   publish:
     name: Publish GitHub Release
-    needs: [validate, build-release]
+    needs: [validate, build-release, emulator-smoke]
     runs-on: ubuntu-24.04
     permissions:
       contents: write

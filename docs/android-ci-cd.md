@@ -12,7 +12,7 @@ This repository uses separate workflows so everyday source edits remain fast and
 
 The QA workflow builds arm64-v8a (phones) and x86_64 (emulator) native libraries, inspects the APK package contents and signature, and uploads only after verification. Its temporary signing key is deliberately discarded; Android treats each QA build as a different signer. To install a new QA build over an existing QA build, uninstall the old app first.
 
-A release is not published unless source formatting, the core geometry/document/layout tests, native compilation, Gradle packaging, APK alignment, package ID, required ABI libraries and APK signature verification pass.
+A release is not published unless source formatting, the core geometry/document/layout tests, native compilation, Gradle packaging, APK alignment, package ID, required ABI libraries and APK signature verification pass, and the signed APK installs and remains alive after launching on an Android 16/API 36 emulator.
 
 ## One-time release signing setup
 
@@ -48,4 +48,4 @@ Open Actions → Android QA APK → latest successful run → Artifacts and down
 
 ## Testing limits
 
-CI verifies formatting, selected core unit tests on release, Android-target compilation, native ABI presence, APK structure, alignment and cryptographic signature. It does not prove keyboard behavior, text-editing usability, GPU compatibility on every ROM or complete end-to-end app operation. These still need hands-on phone testing; record device model/Android version, exact steps and logs when reporting failures.
+CI verifies formatting, selected core unit tests on release, Android-target compilation, native ABI presence, APK structure, alignment, cryptographic signature, and a short Android 16 emulator startup smoke test. It does not prove keyboard behavior, text-editing usability, GPU compatibility on every ROM or complete end-to-end app operation. Those still need hands-on phone testing; record device model/Android version, exact steps and logs when reporting failures.
