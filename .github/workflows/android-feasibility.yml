@@ -10,6 +10,7 @@ on:
       - ".cargo/**"
       - "apps/wordcraft/**"
       - "crates/**"
+      - "android/**"
       - ".github/workflows/android-feasibility.yml"
   workflow_dispatch:
   pull_request:
@@ -19,6 +20,7 @@ on:
       - ".cargo/**"
       - "apps/wordcraft/**"
       - "crates/**"
+      - "android/**"
       - ".github/workflows/android-feasibility.yml"
 
 permissions:
@@ -30,9 +32,9 @@ concurrency:
 
 jobs:
   android-check:
-    name: Compile WordCraft for Android ARM64
+    name: Build WordCraft Android APK (ARM64)
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     env:
       ANDROID_NDK_VERSION: "27.2.12479018"
@@ -52,9 +54,9 @@ jobs:
         with:
           packages: platform-tools
 
-      - name: Install Android NDK
+      - name: Install Android SDK and NDK components
         run: |
-          sdkmanager "platform-tools" "ndk;${ANDROID_NDK_VERSION}"
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0" "ndk;${ANDROID_NDK_VERSION}"
           echo "ANDROID_NDK_HOME=${ANDROID_SDK_ROOT}/ndk/${ANDROID_NDK_VERSION}" >> "$GITHUB_ENV"
 
       - name: Configure Android native toolchain
@@ -81,3 +83,31 @@ jobs:
 
       - name: Link Android shared library
         run: cargo build --release --lib -p wordcraft --target aarch64-linux-android --features eframe/android-game-activity
+
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk --locked
+
+      - name: Stage Android native libraries
+        run: cargo ndk -t arm64-v8a -o android/app/src/main/jniLibs build --release --lib -p wordcraft --features eframe/android-game-activity
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+
+      - name: Build debug APK
+        run: gradle -p android --no-daemon assembleDebug
+
+      - name: Verify APK output
+        run: |
+          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$APK"
+          "${ANDROID_SDK_ROOT}/build-tools/35.0.0/aapt" dump badging "$APK" | grep -E "package: name='ai.storyteller.wordcraft'|application-label:'WordCraft'"
+
+      - name: Upload installable APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: wordcraft-android-arm64-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
