@@ -14,6 +14,10 @@ crate-type = ["cdylib", "rlib"]
 [lints]
 workspace = true
 
+# Android GameActivity requires an exported android_main ABI entry point.
+[lints.rust]
+unsafe_code = "allow"
+
 [dependencies]
 wordcraft-doc = { workspace = true }
 wordcraft-engine = { workspace = true }
