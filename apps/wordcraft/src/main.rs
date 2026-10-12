@@ -11,7 +11,6 @@
 
 #[cfg(target_os = "macos")]
 mod apple_events;
-#[cfg(not(target_os = "android"))]
 mod control_server;
 #[cfg_attr(target_os = "android", path = "file_dialogs_android.rs")]
 mod file_dialogs;
@@ -34,7 +33,7 @@ use wordcraft_ui_egui::{
 struct App(
     WordApp,
     Option<WindowGeometry>,
-    #[cfg(not(target_os = "android"))] Option<control_server::KeyFile>,
+    Option<control_server::KeyFile>,
     file_dialogs::Launcher,
     #[cfg(target_os = "macos")] fmv_macos_events::Inbox,
 );
@@ -67,7 +66,6 @@ impl eframe::App for App {
     }
     fn on_exit(&mut self) {
         save_prefs(&self.0);
-        #[cfg(not(target_os = "android"))]
         if let Some(key_file) = &self.2 {
             key_file.remove();
         }
