@@ -23,9 +23,17 @@ mod print;
 use wordcraft_engine::Session;
 use wordcraft_ui_egui::{
     Services, UiState, WordApp,
-    paste_picture::ClipboardPicture,
     window_geometry::{WindowGeometry, take_rescue},
 };
+#[cfg(not(target_os = "android"))]
+use wordcraft_ui_egui::paste_picture::ClipboardPicture;
+#[cfg(target_os = "android")]
+use winit::platform::android::activity::AndroidApp;
+
+#[cfg(target_os = "android")]
+type PlatformApp = Option<AndroidApp>;
+#[cfg(not(target_os = "android"))]
+type PlatformApp = ();
 
 /// The app, the restored window geometry until the first frame has checked it, the control
 /// server's key file (removed on exit), the file dialogs the app asked for and, on macOS, the
@@ -162,7 +170,7 @@ fn build_sha() -> &'static str {
     option_env!("WORDCRAFT_BUILD_SHA").map(|s| s.get(..8).unwrap_or(s)).unwrap_or("dev")
 }
 
-fn main() -> eframe::Result {
+fn run_app(platform_app: PlatformApp) -> eframe::Result {
     // First, so the panic hook and every start-up warning are recorded (`logging`).
     let logger = logging::install();
     logging::install_panic_hook();
@@ -196,6 +204,8 @@ fn main() -> eframe::Result {
         }
     }
     let mut options = eframe::NativeOptions {
+        #[cfg(target_os = "android")]
+        android_app: platform_app,
         viewport: egui::ViewportBuilder::default()
             .with_title("WordCraft")
             .with_app_id("ai.storyteller.wordcraft")
@@ -256,4 +266,15 @@ fn main() -> eframe::Result {
             )))
         }),
     )
+}
+
+
+#[cfg(not(target_os = "android"))]
+fn main() -> eframe::Result {
+    run_app(())
+}
+
+#[cfg(target_os = "android")]
+fn main() -> eframe::Result {
+    run_app(None)
 }
