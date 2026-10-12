@@ -5,6 +5,10 @@ edition.workspace = true
 license.workspace = true
 publish = false
 default-run = "wordcraft"
+
+[lib]
+path = "src/lib.rs"
+crate-type = ["cdylib", "rlib"]
 description = "WordCraft desktop app"
 
 [lints]
@@ -47,3 +51,13 @@ arboard = { workspace = true, features = ["image-data"] }
 # File › Print opens the PDF in the system's default viewer (`xdg-open`/`gio` on Linux and BSD, the
 # file association on Windows, `open` on macOS) without blocking; already in the tree via egui_kittest.
 open = "5.4"
+
+[target.'cfg(target_os = "android")'.dependencies]
+winit = { version = "0.30", default-features = false, features = ["android-game-activity"] }
+
+[package.metadata.android]
+package = "ai.storyteller.wordcraft"
+apk_name = "wordcraft"
+
+[package.metadata.android.application]
+label = "WordCraft"
