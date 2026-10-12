@@ -20,6 +20,13 @@ android {
     }
 }
 
+// Kotlin 1.8+ folds the old jdk7/jdk8 artifacts into kotlin-stdlib. Exclude
+// older transitive copies brought in by GameActivity to prevent duplicate classes.
+configurations.configureEach {
+    exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk7")
+    exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk8")
+}
+
 dependencies {
     implementation("androidx.games:games-activity:4.4.0")
     implementation("androidx.appcompat:appcompat:1.7.0")
