@@ -5,11 +5,11 @@ edition.workspace = true
 license.workspace = true
 publish = false
 default-run = "wordcraft"
+description = "WordCraft desktop app"
 
 [lib]
 path = "src/lib.rs"
 crate-type = ["cdylib", "rlib"]
-description = "WordCraft desktop app"
 
 [lints]
 workspace = true
