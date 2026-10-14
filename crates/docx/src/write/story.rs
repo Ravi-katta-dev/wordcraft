@@ -369,8 +369,9 @@ impl Writer<'_> {
     fn rev_attrs(&mut self, idx: u32) -> (String, String, String) {
         self.next_rev_id += 1;
         let r = self.doc.revisions.get(idx as usize);
-        let author = r.map(|r| r.author.clone()).filter(|a| !a.is_empty()).unwrap_or_else(|| "Unknown".into());
-        let date = r.map(|r| r.date.clone()).unwrap_or_default();
+        let author = super::annotation_author(self.doc, r.map_or("", |r| r.author.as_str())).to_string();
+        // Remove date and time (§17.15.1.69): tracked changes are saved without `w:date`.
+        let date = if self.doc.settings.remove_date_time { String::new() } else { r.map(|r| r.date.clone()).unwrap_or_default() };
         (self.next_rev_id.to_string(), author, date)
     }
 
@@ -524,38 +525,55 @@ impl Writer<'_> {
                 w.close("w:r");
                 self.rev_close(w, props);
             }
-            // A chart or diagram read from a file: its frame from the object's size and position,
-            // the graphic inside as read. Ones made some other way have nothing to write, except
-            // charts and SmartArt with a model (made or edited in WordCraft): their parts are
-            // written from it.
+            // Editable charts and SmartArt keep main's model writer; opaque graphics and native
+            // ink keep their original source and related parts.
             InlineObject::Graphic { w: gw, h: gh, alt, float, graphic } => {
-                let inner = match (graphic.chart.as_deref(), graphic.smart_art.as_deref(), graphic.source.as_deref()) {
-                    // A chart WordCraft can edit: a chart part written from its model.
-                    (Some(spec), _, _) => self.chart_graphic(spec, rels),
-                    (None, Some(spec), _) => self.smart_art_graphic(spec, *gw, *gh, rels),
-                    (None, None, Some(src)) => {
-                        let Some(inner) = self.embedded_xml(src, rels, None) else { return };
-                        inner
-                    }
-                    (None, None, None) => return,
+                let ink = graphic.kind == wordcraft_doc::graphic::GraphicKind::Ink;
+                let root = match (graphic.chart.as_deref(), graphic.smart_art.as_deref(), graphic.source.as_deref()) {
+                    (Some(spec), _, _) => crate::xml::parse(self.chart_graphic(spec, rels).as_bytes()).ok(),
+                    (None, Some(spec), _) => crate::xml::parse(self.smart_art_graphic(spec, *gw, *gh, rels).as_bytes()).ok(),
+                    (None, None, Some(src)) => self.embedded_tree(src, rels, ink.then_some((*gw, *gh, float, alt.as_str()))),
+                    (None, None, None) => None,
                 };
-                if inner.is_empty() {
+                let Some(mut root) = root else { return };
+                let direct_ink = ink && root.name == "w:contentPart";
+                if ink && !direct_ink {
+                    Self::ink_transform(&mut root, (graphic.w, graphic.h), (*gw, *gh), float, 0);
+                }
+                let alternate = (ink && root.name == "mc:AlternateContent").then_some(&root);
+                let fallback = alternate.and_then(|e| e.child("mc:Fallback"));
+                let native = alternate.and_then(|e| e.child("mc:Choice")).and_then(|e| e.find("a:graphic"));
+                if alternate.is_some() && native.is_none() {
                     return;
                 }
                 self.rev_open(w, props);
                 w.open("w:r", &[]);
                 self.rpr(w, props);
-                w.open("w:drawing", &[]);
-                let docpr = self.next_docpr();
-                let name = match graphic.kind {
-                    wordcraft_doc::graphic::GraphicKind::Chart => format!("Chart {docpr}"),
-                    wordcraft_doc::graphic::GraphicKind::Diagram => format!("Diagram {docpr}"),
-                };
-                self.drawing_open(w, float, *gw, *gh, &docpr, &name, alt);
-                w.empty("wp:cNvGraphicFramePr", &[]);
-                w.raw(&inner);
-                w.close(if float.wrap == Wrap::Inline { "wp:inline" } else { "wp:anchor" });
-                w.close("w:drawing");
+                if direct_ink {
+                    w.raw(&root.to_xml());
+                } else {
+                    if fallback.is_some() {
+                        w.open("mc:AlternateContent", &[]);
+                        w.open("mc:Choice", &[("Requires", "wpi")]);
+                    }
+                    w.open("w:drawing", &[]);
+                    let docpr = self.next_docpr();
+                    let name = match graphic.kind {
+                        wordcraft_doc::graphic::GraphicKind::Chart => format!("Chart {docpr}"),
+                        wordcraft_doc::graphic::GraphicKind::Diagram => format!("Diagram {docpr}"),
+                        wordcraft_doc::graphic::GraphicKind::Ink => format!("Ink {docpr}"),
+                    };
+                    self.drawing_open(w, float, *gw, *gh, &docpr, &name, alt);
+                    w.empty("wp:cNvGraphicFramePr", &[]);
+                    w.raw(&native.unwrap_or(&root).to_xml());
+                    w.close(if float.wrap == Wrap::Inline { "wp:inline" } else { "wp:anchor" });
+                    w.close("w:drawing");
+                    if let Some(fallback) = fallback {
+                        w.close("mc:Choice");
+                        w.raw(&fallback.to_xml());
+                        w.close("mc:AlternateContent");
+                    }
+                }
                 w.close("w:r");
                 self.rev_close(w, props);
             }
@@ -874,7 +892,7 @@ impl Writer<'_> {
         self.used_media.insert(media.clone());
         w.open("pic:pic", &[]);
         w.open("pic:nvPicPr", &[]);
-        nv_props(w, "pic:cNvPr", "0", file, alt, &float.alt);
+        nv_props(w, "pic:cNvPr", "0", file, alt, &float.alt, float.hidden);
         w.open("pic:cNvPicPr", &[]);
         w.empty("a:picLocks", &[("noChangeAspect", "1"), ("noChangeArrowheads", "1")]);
         w.close("pic:cNvPicPr");
@@ -906,7 +924,7 @@ impl Writer<'_> {
         w.open("wps:wsp", &[]);
         if let Some(id) = id {
             let name = shape_name(*kind, freeform.as_deref(), id);
-            nv_props(w, "wps:cNvPr", id, &name, &float.alt.text, &float.alt);
+            nv_props(w, "wps:cNvPr", id, &name, &float.alt.text, &float.alt, float.hidden);
         }
         if kind.is_connector() {
             // A connector's glued ends (ECMA-376 §20.1.2.2.8 `cNvCxnSpPr`).
@@ -1019,13 +1037,25 @@ impl Writer<'_> {
         if body.anchor != wordcraft_doc::props::VAlign::Top {
             attrs.push(("anchor", wordcraft_doc::props::anchor_ooxml(body.anchor)));
         }
-        match extra.warp.as_ref().and_then(|t| t.sanitized()) {
-            Some(warp) => {
-                w.open("wps:bodyPr", &attrs);
-                text_warp(w, &warp);
-                w.close("wps:bodyPr");
+        // Internal margins, when the box has its own.
+        let inset = body.inset.map(|i| i.map(|v| v.min(wordcraft_doc::MAX_TEXT_BOX_INSET).to_string()));
+        if let Some(inset) = &inset {
+            for (n, v) in ["lIns", "tIns", "rIns", "bIns"].into_iter().zip(inset) {
+                attrs.push((n, v));
             }
-            None => w.empty("wps:bodyPr", &attrs),
+        }
+        let warp = extra.warp.as_ref().and_then(|t| t.sanitized());
+        if warp.is_none() && !body.auto_fit {
+            w.empty("wps:bodyPr", &attrs);
+        } else {
+            w.open("wps:bodyPr", &attrs);
+            if let Some(warp) = &warp {
+                text_warp(w, warp);
+            }
+            if body.auto_fit {
+                w.empty("a:spAutoFit", &[]);
+            }
+            w.close("wps:bodyPr");
         }
         w.close("wps:wsp");
     }
@@ -1110,7 +1140,7 @@ impl Writer<'_> {
             Wrap::TopAndBottom => w.empty("wp:wrapTopAndBottom", &[]),
             Wrap::BehindText | Wrap::InFrontOfText => w.empty("wp:wrapNone", &[]),
         }
-        nv_props(w, "wp:docPr", docpr, name, alt, &float.alt);
+        nv_props(w, "wp:docPr", docpr, name, alt, &float.alt, float.hidden);
     }
 
     fn table(&mut self, w: &mut W, t: &Table, rels: &mut PartRels, depth: usize) {
@@ -1513,13 +1543,16 @@ fn toc_span(bl: &Blocks) -> Option<(usize, usize)> {
 /// `CT_NonVisualDrawingProps`) with its alt text `descr`, its title, and the decorative mark as
 /// the `adec:decorative` extension ([MS-ODRAWXML]). A description that is only the title (read
 /// from a file with no description) is not written twice.
-pub(super) fn nv_props(w: &mut W, tag: &str, id: &str, name: &str, descr: &str, alt: &AltText) {
+pub(super) fn nv_props(w: &mut W, tag: &str, id: &str, name: &str, descr: &str, alt: &AltText, hidden: bool) {
     let mut attrs = vec![("id", id), ("name", name)];
     if descr != alt.title || descr.is_empty() {
         attrs.push(("descr", descr));
     }
     if !alt.title.is_empty() {
         attrs.push(("title", alt.title.as_str()));
+    }
+    if hidden {
+        attrs.push(("hidden", "1"));
     }
     if !alt.decorative {
         w.empty(tag, &attrs);

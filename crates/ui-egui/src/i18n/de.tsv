@@ -104,6 +104,7 @@
 	Link level to style:	Ebene mit Formatvorlage verknüpfen:
 	List Definition	Listendefinition
 	More templates →	Weitere Vorlagen →
+	No document is open. Create a document or open one first.	Es ist kein Dokument geöffnet. Erstellen oder öffnen Sie zuerst ein Dokument.
 	No templates match your search.	Keine Vorlagen entsprechen Ihrer Suche.
 	Nothing	Keine
 	Number alignment:	Nummernausrichtung:
@@ -416,6 +417,7 @@
 	Insert Above	Oberhalb einfügen
 	Insert Below	Unterhalb einfügen
 	Insert Caption	Beschriftung einfügen
+	Insert Caption…	Beschriftung einfügen…
 	Insert Citation	Zitat einfügen
 	Insert Endnote	Endnote einfügen
 	Insert Footnote	Fußnote einfügen
@@ -791,6 +793,7 @@
 	Table of Contents	Inhaltsverzeichnis
 	Table of\nContents	Inhalts-\nverzeichnis
 	Table Properties	Tabelleneigenschaften
+	Table Properties…	Tabelleneigenschaften…
 	Table Row Height	Tabellenzeilenhöhe
 	Table Style Options	Tabellenformat-Optionen
 	Table Styles	Tabellenformate
@@ -840,6 +843,10 @@
 	Underline Words Only	Nur Wörter unterstreichen
 	Undo	Rückgängig
 	Undo {action}	{action} rückgängig
+	Undo Actions	Mehrere Aktionen rückgängig
+	Undo History	Rückgängig-Verlauf
+	Undo 1 Action	1 Aktion rückgängig
+	Undo {n} Actions	{n} Aktionen rückgängig
 	Ungroup	Gruppierung aufheben
 	Up	Nach oben
 	Update Field	Feld aktualisieren
@@ -1003,6 +1010,8 @@
 	Keeps the fonts and formatting of the copied text.	Behält die Schriftarten und Formatierung des kopierten Textes bei.
 	Reads the clipboard's rich text and keeps its formatting.	Liest den Rich Text der Zwischenablage und behält dessen Formatierung bei.
 	Reads the clipboard's web content and keeps its formatting.	Liest den Webinhalt der Zwischenablage und behält dessen Formatierung bei.
+	Picture	Bild
+	Pastes the clipboard's picture.	Fügt das Bild aus der Zwischenablage ein.
 	Drops all formatting and pastes plain text.	Verwirft jegliche Formatierung und fügt reinen Text ein.
 	Advanced Find	Erweiterte Suche
 	Advanced Find…	Erweiterte Suche…
@@ -1316,7 +1325,8 @@
 	Flip Horizontal	Horizontal spiegeln
 	Formatted	Formatiert
 	Interface size:	Oberflächengröße:
-	Makes the ribbon, menus and dialogs larger or smaller, on top of your system's display scaling. Document zoom is separate.	Vergrößert oder verkleinert Menüband, Menüs und Dialoge, zusätzlich zur Anzeigeskalierung Ihres Systems. Die Dokumentansicht ist davon getrennt.
+	Auto ({percent}%)	Automatisch ({percent}%)
+	Makes the ribbon, menus and dialogs larger or smaller. Auto follows your system's display scaling; 100% is one screen pixel per point. Document zoom is separate.	Vergrößert oder verkleinert Menüband, Menüs und Dialoge. „Automatisch“ folgt der Anzeigeskalierung Ihres Systems; 100% ist ein Bildschirmpixel pro Punkt. Die Dokumentansicht ist davon getrennt.
 	Base text:	Basistext:
 	Distribute letters	Buchstaben verteilen
 	Distribute spacing	Abstände verteilen
@@ -1451,10 +1461,16 @@
 	Animate the caret (it glides and fades)	Einfügemarke animieren (sie gleitet und blendet aus)
 	On: the caret glides to its new place when you type or use the arrow keys, and its blink fades. Off: it jumps and blinks on and off.	Ein: Die Einfügemarke gleitet beim Tippen oder mit den Pfeiltasten an ihre neue Stelle, und ihr Blinken blendet weich. Aus: Sie springt und blinkt hart an und aus.
 	Word XML Document (*.xml)	Word-XML-Dokument (*.xml)
+	Word 2003 XML Document (*.xml)	Word-2003-XML-Dokument (*.xml)
 	Choose the sheet that holds the recipients.	Wählen Sie das Tabellenblatt mit den Empfängern.
 	First row of data contains column headers	Erste Datenzeile enthält Spaltenüberschriften
 	Deleted	Gelöscht
 	Resize Table by Dragging	Tabellengröße durch Ziehen ändern
+	Select Column	Spalte auswählen
+	Select Table Cells by Clicking	Tabellenzellen per Klick auswählen
+	Insert Row or Column by Clicking	Zeile oder Spalte per Klick einfügen
+	Move Table by Dragging	Tabelle durch Ziehen verschieben
+	AutoFit Column by Double-Clicking	Spalte per Doppelklick automatisch anpassen
 	Print Markup	Markups drucken
 	Comments beside each page and tracked changes in PDFs, prints and images; a comment list at the end of web pages, Markdown and text.	Kommentare neben jeder Seite und nachverfolgte Änderungen in PDFs, Ausdrucken und Bildern; eine Kommentarliste am Ende von Webseiten, Markdown und Text.
 	1. Formatting restrictions	1. Formatierungseinschränkungen
@@ -2035,6 +2051,9 @@
 	Your system has animation effects turned off.	Auf Ihrem System sind Animationseffekte deaktiviert.
 	Your system doesn't report an animation setting, so animation effects stay on.	Ihr System meldet keine Animationseinstellung, daher bleiben Animationseffekte aktiviert.
 	Do Not Check Spelling or Grammar	Rechtschreibung und Grammatik nicht prüfen
+	Start-up	Programmstart
+	Show the Start screen when WordCraft starts	Startbildschirm beim Start von WordCraft anzeigen
+	On: WordCraft opens on File › Home, with a blank document, the templates and your recent documents. Off: it opens a blank document.	Ein: WordCraft öffnet sich auf Datei › Start mit einem leeren Dokument, den Vorlagen und Ihren zuletzt verwendeten Dokumenten. Aus: Es öffnet ein leeres Dokument.
 	Couldn't make WordCraft the default: {error}	WordCraft konnte nicht als Standard festgelegt werden: {error}
 	In Default apps, choose WordCraft for the document types you want it to open.	Wählen Sie unter „Standard-Apps“ WordCraft für die Dokumenttypen, die es öffnen soll.
 	Make WordCraft the default for Word documents…	WordCraft als Standard für Word-Dokumente festlegen…
@@ -2047,3 +2066,21 @@
 	Hindi	Hindi
 	Context	Kontext
 	System	System
+	Show KeyTips (Alt or F10)	Zugriffstasten anzeigen (Alt oder F10)
+	Reading	Lesen
+	Reading Column Width	Spaltenbreite beim Lesen
+	Reading Line Spacing	Zeilenabstand beim Lesen
+	Reading Text Size	Textgröße beim Lesen
+	Correct TWo INitial CApitals	ZWei GRoßbuchstaben am WOrtanfang korrigieren
+	Correct accidental usage of cAPS LOCK key	Unbeabsichtigtes Verwenden der fESTSTELLTASTE korrigieren
+	Region:	Region:
+	Automatic ({region})	Automatisch ({region})
+	Search	Suchen
+	Title Bar	Titelleiste
+	Privacy Options	Datenschutzoptionen
+	Trust Center	Sicherheitscenter
+	Privacy for this document	Datenschutz für dieses Dokument
+	Remove my name from comments, changes and file properties when saving	Beim Speichern meinen Namen aus Kommentaren, Änderungen und Dateieigenschaften entfernen
+	Leave out the date and time of comments and tracked changes when saving	Beim Speichern Datum und Uhrzeit von Kommentaren und nachverfolgten Änderungen weglassen
+	The document you are editing keeps the names and dates; only the saved file leaves them out.	Das bearbeitete Dokument behält Namen und Daten; nur die gespeicherte Datei lässt sie weg.
+	Privacy Settings	Aktuelle Datenschutzeinstellungen
