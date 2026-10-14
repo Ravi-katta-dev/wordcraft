@@ -93,6 +93,7 @@
 	Legal style numbering	Numerazione stile legale
 	Link level to style:	Collega livello allo stile:
 	List Definition	Definizione elenco
+	No document is open. Create a document or open one first.	Nessun documento aperto. Crea o apri prima un documento.
 	Nothing	Niente
 	Number alignment:	Allineamento numero:
 	Number format	Formato numero
@@ -412,6 +413,7 @@
 	Insert Above	Inserisci sopra
 	Insert Below	Inserisci sotto
 	Insert Caption	Inserisci didascalia
+	Insert Caption…	Inserisci didascalia…
 	Insert Citation	Inserisci citazione
 	Insert Endnote	Inserisci nota di chiusura
 	Insert Footnote	Inserisci nota a piè di pagina
@@ -628,6 +630,8 @@
 	Read\nMode	Modalità\nlettura
 	Reads the clipboard's rich text and keeps its formatting.	Legge il testo RTF degli appunti e ne mantiene la formattazione.
 	Reads the clipboard's web content and keeps its formatting.	Legge il contenuto web degli appunti e ne mantiene la formattazione.
+	Picture	Immagine
+	Pastes the clipboard's picture.	Incolla l'immagine degli appunti.
 	Reading Highlight	Evidenziazione lettura
 	Recent	Recenti
 	Record Macro	Registra macro
@@ -801,6 +805,7 @@
 	Table Design	Tabella Design
 	Table Layout	Tabella Layout
 	Table Properties	Proprietà tabella
+	Table Properties…	Proprietà tabella…
 	Table Row Height	Altezza riga tabella
 	Table Style Options	Opzioni stile tabella
 	Table Styles	Stili tabella
@@ -855,6 +860,10 @@
 	Underline Words Only	Sottolinea solo le parole
 	Undo	Annulla
 	Undo {action}	Annulla {action}
+	Undo Actions	Annulla azioni
+	Undo History	Cronologia annullamenti
+	Undo 1 Action	Annulla 1 azione
+	Undo {n} Actions	Annulla {n} azioni
 	Unformatted Text	Testo non formattato
 	Up	Su
 	Update Field	Aggiorna campo
@@ -1322,7 +1331,8 @@
 	Flip Horizontal	Capovolgi orizzontalmente
 	Formatted	Formattato
 	Interface size:	Dimensioni interfaccia:
-	Makes the ribbon, menus and dialogs larger or smaller, on top of your system's display scaling. Document zoom is separate.	Ingrandisce o riduce la barra multifunzione, i menu e le finestre di dialogo, in aggiunta al ridimensionamento dello schermo del sistema. Lo zoom del documento è separato.
+	Auto ({percent}%)	Auto ({percent}%)
+	Makes the ribbon, menus and dialogs larger or smaller. Auto follows your system's display scaling; 100% is one screen pixel per point. Document zoom is separate.	Ingrandisce o riduce la barra multifunzione, i menu e le finestre di dialogo. Auto segue il ridimensionamento dello schermo del sistema; 100% è un pixel dello schermo per punto. Lo zoom del documento è separato.
 	Title	Titolo
 	Subject	Oggetto
 	Keywords	Parole chiave
@@ -1526,6 +1536,7 @@
 	Use the Insert key to switch overtype on and off	Usa il tasto Ins per attivare e disattivare la sovrascrittura
 	Extend Selection by Units	Estendi selezione per unità
 	Word XML Document (*.xml)	Documento Word XML (*.xml)
+	Word 2003 XML Document (*.xml)	Documento Word 2003 XML (*.xml)
 	Deleted	Eliminato
 	Print Markup	Stampa revisioni
 	Comments beside each page and tracked changes in PDFs, prints and images; a comment list at the end of web pages, Markdown and text.	Commenti accanto a ogni pagina e revisioni in PDF, stampe e immagini; un elenco dei commenti alla fine di pagine web, Markdown e testo.
@@ -2319,6 +2330,11 @@
 	Radicals	Radicali
 	Recipient lists	Elenchi destinatari
 	Resize Table by Dragging	Ridimensiona la tabella trascinando
+	Select Column	Seleziona colonna
+	Select Table Cells by Clicking	Seleziona celle della tabella con un clic
+	Insert Row or Column by Clicking	Inserisci riga o colonna con un clic
+	Move Table by Dragging	Sposta la tabella trascinando
+	AutoFit Column by Double-Clicking	Adatta la colonna con un doppio clic
 	Right Arrow with Text Above	Freccia a destra con testo sopra
 	Right Arrow with Text Below	Freccia a destra con testo sotto
 	Right Bracket Twice	Parentesi quadra destra due volte
@@ -2420,6 +2436,9 @@
 	✓ None	✓ Nessuno
 preview	Title	Esempio
 	Do Not Check Spelling or Grammar	Non controllare ortografia e grammatica
+	Start-up	Avvio
+	Show the Start screen when WordCraft starts	Mostra la schermata iniziale all'avvio di WordCraft
+	On: WordCraft opens on File › Home, with a blank document, the templates and your recent documents. Off: it opens a blank document.	Attivo: WordCraft si apre su File › Home, con un documento vuoto, i modelli e i documenti recenti. Disattivo: apre un documento vuoto.
 	Couldn't make WordCraft the default: {error}	Impossibile rendere WordCraft l'app predefinita: {error}
 	In Default apps, choose WordCraft for the document types you want it to open.	In App predefinite, scegli WordCraft per i tipi di documento che deve aprire.
 	Make WordCraft the default for Word documents…	Rendi WordCraft l'app predefinita per i documenti Word…
@@ -2432,3 +2451,21 @@ preview	Title	Esempio
 	Hindi	Hindi
 	Context	Contesto
 	System	Sistema
+	Show KeyTips (Alt or F10)	Mostra i suggerimenti tasti (Alt o F10)
+	Reading	Lettura
+	Reading Column Width	Larghezza colonna di lettura
+	Reading Line Spacing	Interlinea di lettura
+	Reading Text Size	Dimensione testo di lettura
+	Correct TWo INitial CApitals	Correggi DUe MAiuscole INiziali
+	Correct accidental usage of cAPS LOCK key	Correggi l'uso accidentale del tasto bLOC mAIUSC
+	Region:	Area geografica:
+	Automatic ({region})	Automatico ({region})
+	Search	Cerca
+	Title Bar	Barra del titolo
+	Privacy Options	Opzioni di privacy
+	Trust Center	Centro protezione
+	Privacy for this document	Privacy di questo documento
+	Remove my name from comments, changes and file properties when saving	Rimuovi il mio nome da commenti, modifiche e proprietà del file al salvataggio
+	Leave out the date and time of comments and tracked changes when saving	Ometti data e ora di commenti e revisioni al salvataggio
+	The document you are editing keeps the names and dates; only the saved file leaves them out.	Il documento che stai modificando conserva nomi e date; solo il file salvato li omette.
+	Privacy Settings	Impostazioni di privacy attuali

@@ -9,7 +9,13 @@ pub fn open(ext: &str, bytes: &[u8]) -> Option<Result<Document, String>> {
         "doc" | "dot" => Some(wordcraft_docbin::read(bytes).map_err(|e| e.to_string())),
         // Word XML Document (Flat OPC) or Word 2003 XML, told apart by the root element.
         "xml" => Some(wordcraft_docx::read_xml(bytes).map_err(|e| e.to_string())),
-        other => wordcraft_formats::import(other, bytes),
+        // HTML, Markdown, ODT, RTF…: pictures fit the text width (see `io::fit_pictures`).
+        other => wordcraft_formats::import(other, bytes).map(|r| {
+            r.map(|mut doc| {
+                crate::io::fit_pictures(&mut doc);
+                doc
+            })
+        }),
     }
 }
 
@@ -20,6 +26,7 @@ pub fn save(ext: &str, doc: &Document, opts: &crate::io::ExportOptions) -> Optio
         return Some(wordcraft_docx::write_as(doc, flavor).map_err(|e| e.to_string()));
     }
     match ext {
+        "xml" if opts.word2003 => Some(wordcraft_docx::write_wordml2003(doc).map_err(|e| e.to_string())),
         "xml" => Some(wordcraft_docx::write_flat(doc).map_err(|e| e.to_string())),
         "png" => Some(render_png(doc, 0, 2.0, opts)),
         "pdf" => {

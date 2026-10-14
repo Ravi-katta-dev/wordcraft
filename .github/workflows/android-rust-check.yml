@@ -56,10 +56,12 @@ jobs:
       - name: Configure Android native toolchain
         run: |
           TOOLCHAIN="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
-          echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$TOOLCHAIN/aarch64-linux-android24-clang" >> "$GITHUB_ENV"
-          echo "CC_aarch64-linux-android=$TOOLCHAIN/aarch64-linux-android24-clang" >> "$GITHUB_ENV"
-          echo "CXX_aarch64-linux-android=$TOOLCHAIN/aarch64-linux-android24-clang++" >> "$GITHUB_ENV"
-          echo "AR_aarch64-linux-android=$TOOLCHAIN/llvm-ar" >> "$GITHUB_ENV"
+          {
+            echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$TOOLCHAIN/aarch64-linux-android24-clang"
+            echo "CC_aarch64-linux-android=$TOOLCHAIN/aarch64-linux-android24-clang"
+            echo "CXX_aarch64-linux-android=$TOOLCHAIN/aarch64-linux-android24-clang++"
+            echo "AR_aarch64-linux-android=$TOOLCHAIN/llvm-ar"
+          } >> "$GITHUB_ENV"
       - name: Report toolchain versions
         run: |
           rustc --version
