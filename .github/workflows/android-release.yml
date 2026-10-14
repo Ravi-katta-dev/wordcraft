@@ -58,9 +58,11 @@ jobs:
             exit 1
           fi
           TAG="android-v$VERSION"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          {
+            echo "version=$VERSION"
+            echo "version_code=$VERSION_CODE"
+            echo "tag=$TAG"
+          } >> "$GITHUB_OUTPUT"
           echo "Release: $TAG (versionCode=$VERSION_CODE)"
       - uses: dtolnay/rust-toolchain@stable
         with:
